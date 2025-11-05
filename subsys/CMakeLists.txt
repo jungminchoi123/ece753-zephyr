@@ -33,6 +33,7 @@ add_subdirectory(stats)
 add_subdirectory(storage)
 add_subdirectory(task_wdt)
 add_subdirectory(testsuite)
+add_subdirectory_ifdef(CONFIG_FAULT_TOLERANCE fault_tolerance)
 add_subdirectory(tracing)
 add_subdirectory(usb)
 

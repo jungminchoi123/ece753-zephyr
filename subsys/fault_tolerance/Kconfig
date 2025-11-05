@@ -1,0 +1,120 @@
+# Copyright (c) 2025 ECE753 Project Team
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig FAULT_TOLERANCE
+	bool "Enhanced Fault Tolerance Framework"
+	depends on MULTITHREADING
+	depends on LOG
+	select TASK_WDT if WATCHDOG
+	help
+	  Enable enhanced fault tolerance framework for safety-critical
+	  embedded systems. Provides comprehensive fault detection, 
+	  recovery, and logging capabilities.
+
+if FAULT_TOLERANCE
+
+config FAULT_TOLERANCE_MAX_HANDLERS_PER_TYPE
+	int "Maximum fault handlers per fault type"
+	default 4
+	range 1 16
+	help
+	  Maximum number of fault handlers that can be registered
+	  for each fault type.
+
+config FAULT_TOLERANCE_MAX_RECOVERY_CALLBACKS
+	int "Maximum recovery callbacks"
+	default 8
+	range 1 32
+	help
+	  Maximum number of recovery callbacks that can be registered.
+
+config FAULT_TOLERANCE_MAX_LOG_ENTRIES
+	int "Maximum fault log entries"
+	default 64
+	range 16 512
+	help
+	  Maximum number of fault log entries to keep in memory.
+	  Older entries are overwritten in a circular buffer fashion.
+
+config FAULT_TOLERANCE_MONITOR_INTERVAL_MS
+	int "Health monitoring interval in milliseconds"
+	default 100
+	range 10 5000
+	help
+	  Interval between system health monitoring checks.
+
+config FAULT_TOLERANCE_STACK_MONITORING
+	bool "Enable stack usage monitoring"
+	default y
+	depends on THREAD_STACK_INFO
+	help
+	  Monitor stack usage of all threads and detect stack overflows.
+
+config FAULT_TOLERANCE_MEMORY_MONITORING
+	bool "Enable memory usage monitoring"
+	default y
+	depends on HEAP_MEM_POOL_SIZE > 0
+	help
+	  Monitor heap and memory pool usage to detect memory leaks
+	  and exhaustion.
+
+config FAULT_TOLERANCE_TIMING_MONITORING
+	bool "Enable timing violation monitoring"
+	default y
+	help
+	  Monitor thread execution times and detect timing violations.
+
+config FAULT_TOLERANCE_DEADLOCK_DETECTION
+	bool "Enable deadlock detection"
+	default y
+	depends on MULTITHREADING
+	help
+	  Detect potential deadlocks between threads.
+
+config FAULT_TOLERANCE_RACE_CONDITION_DETECTION
+	bool "Enable race condition detection"
+	default n
+	help
+	  Enable detection of potential race conditions (experimental).
+
+config FAULT_TOLERANCE_PERSISTENT_LOGGING
+	bool "Enable persistent fault logging"
+	default n
+	depends on NVS || SETTINGS
+	help
+	  Store fault logs in persistent storage to survive reboots.
+
+config FAULT_TOLERANCE_AUTO_RECOVERY
+	bool "Enable automatic recovery"
+	default y
+	help
+	  Automatically attempt recovery from detected faults.
+
+config FAULT_TOLERANCE_RECOVERY_TIMEOUT_MS
+	int "Recovery operation timeout in milliseconds"
+	default 5000
+	range 1000 30000
+	depends on FAULT_TOLERANCE_AUTO_RECOVERY
+	help
+	  Maximum time allowed for recovery operations to complete.
+
+config FAULT_TOLERANCE_WATCHDOG_INTEGRATION
+	bool "Integrate with hardware watchdog"
+	default y
+	depends on WATCHDOG
+	help
+	  Use hardware watchdog as ultimate fallback for critical faults.
+
+config FAULT_TOLERANCE_STATISTICS
+	bool "Enable fault statistics collection"
+	default y
+	help
+	  Collect and maintain statistics about faults and recoveries.
+
+config FAULT_TOLERANCE_DEBUG
+	bool "Enable fault tolerance debugging"
+	default n
+	help
+	  Enable additional debugging output for fault tolerance system.
+
+endif # FAULT_TOLERANCE
