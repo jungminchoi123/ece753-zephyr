@@ -1,0 +1,29 @@
+# Author: Jack Ostapeic, MS ECE student at UW-Madison
+
+menuconfig FAULT_TOLERANCE
+    bool "Enhanced Fault Tolerance Framework"
+    help
+        Enable the enhanced fault tolerance framework for safety-critical embedded applications.
+        Provides comprehensive fault detection, recovery, and logging capabilities.
+
+if FAULT_TOLERANCE
+
+config FAULT_TOLERANCE_AUTO_INIT
+    bool "Enable Automatic Initialization"
+    default n
+    help
+        Enable automatic initialization of the fault tolerance framework during system startup.
+
+config FAULT_TOLERANCE_INIT_PRIORITY
+    int "Fault Tolerance Initialization Priority"
+    default 50
+    help
+        Initialization priority for the fault tolerance framework.
+        Lower values indicate earlier initialization during system startup.
+        Typical values:
+            - 40-60: Standard initialization range for most subsystems.
+            - 30-39: Core services
+            - 61-70: Application-level services
+
+
+endif # FAULT_TOLERANCE
