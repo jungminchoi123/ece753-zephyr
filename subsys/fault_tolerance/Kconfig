@@ -1,29 +1,263 @@
-# Author: Jack Ostapeic, MS ECE student at UW-Madison
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (c) 2025 Jack Ostapeic
+#
+# Fault Tolerance Framework Configuration
 
 menuconfig FAULT_TOLERANCE
-    bool "Enhanced Fault Tolerance Framework"
-    help
-        Enable the enhanced fault tolerance framework for safety-critical embedded applications.
-        Provides comprehensive fault detection, recovery, and logging capabilities.
+	bool "Fault Tolerance Framework"
+	default n
+	help
+	  Enable the Fault Tolerance Framework for Zephyr RTOS.
+	  This framework provides comprehensive fault detection,
+	  reporting, and recovery mechanisms.
 
 if FAULT_TOLERANCE
 
-config FAULT_TOLERANCE_AUTO_INIT
-    bool "Enable Automatic Initialization"
-    default n
-    help
-        Enable automatic initialization of the fault tolerance framework during system startup.
+config FT_LOG_LEVEL
+	int "Fault Tolerance Framework log level"
+	depends on LOG
+	default 3
+	range 0 4
+	help
+	  Set the log level for the Fault Tolerance Framework.
+	  0 = OFF, 1 = ERROR, 2 = WARNING, 3 = INFO, 4 = DEBUG
 
-config FAULT_TOLERANCE_INIT_PRIORITY
-    int "Fault Tolerance Initialization Priority"
-    default 50
-    help
-        Initialization priority for the fault tolerance framework.
-        Lower values indicate earlier initialization during system startup.
-        Typical values:
-            - 40-60: Standard initialization range for most subsystems.
-            - 30-39: Core services
-            - 61-70: Application-level services
+config FT_RECOVERY_THREAD_PRIORITY
+	int "Recovery thread priority"
+	default 5
+	range 0 15
+	help
+	  Priority of the fault recovery thread. Lower values indicate
+	  higher priority. Should be high priority to handle critical faults.
 
+config FT_RECOVERY_STACK_SIZE
+	int "Recovery thread stack size"
+	default 2048
+	range 1024 8192
+	help
+	  Stack size for the fault recovery thread in bytes.
+
+config FT_ENABLE_STATISTICS
+	bool "Enable fault statistics"
+	default y
+	help
+	  Enable collection and reporting of fault statistics.
+
+config FT_ENABLE_ASYNC_RECOVERY
+	bool "Enable asynchronous recovery"
+	default y
+	help
+	  Enable asynchronous fault recovery using work queues.
+	  This allows the fault handler to return quickly while
+	  recovery happens in the background.
+
+config FT_MAX_RECOVERY_ATTEMPTS
+	int "Maximum recovery attempts"
+	default 3
+	range 1 10
+	help
+	  Maximum number of recovery attempts before giving up.
+
+config FT_DEFAULT_RECOVERY_TIMEOUT_MS
+	int "Default recovery timeout (ms)"
+	default 5000
+	range 1000 30000
+	help
+	  Default timeout for recovery operations in milliseconds.
+
+config FT_ENABLE_THREAD_RECOVERY
+	bool "Enable thread recovery module"
+	default y
+	help
+	  Enable the thread recovery module for handling thread-related faults
+	  such as stack overflows.
+
+# ==============================================================================
+# Modular Fault Tolerance Components
+# ==============================================================================
+
+menu "Fault Tolerance Modules"
+
+config FT_ENABLE_STACK_OVERFLOW_PROTECTION
+	bool "Enable Stack Overflow Protection"
+	default y
+	help
+	  Enable predictive stack overflow detection and prevention.
+	  Provides real-time stack usage monitoring, predictive thread
+	  suspension, and graceful degradation capabilities.
+
+config FT_STACK_OVERFLOW_THRESHOLD_PERCENT
+	int "Stack overflow detection threshold (%)"
+	depends on FT_ENABLE_STACK_OVERFLOW_PROTECTION
+	default 80
+	range 60 90
+	help
+	  Percentage of stack usage that triggers overflow protection.
+	  Lower values provide earlier detection but may cause false positives.
+
+config FT_STACK_OVERFLOW_CHECK_INTERVAL_MS
+	int "Stack overflow check interval (ms)"
+	depends on FT_ENABLE_STACK_OVERFLOW_PROTECTION
+	default 500
+	range 100 2000
+	help
+	  Interval between stack usage checks in milliseconds.
+
+config FT_ENABLE_BUFFER_OVERFLOW_PROTECTION
+	bool "Enable Buffer Overflow Protection"
+	default y
+	help
+	  Enable comprehensive buffer overflow detection and mitigation.
+	  Provides canary-based protection, automatic buffer repair,
+	  and thread isolation capabilities.
+
+config FT_BUFFER_OVERFLOW_CANARY_VALUE
+	hex "Buffer overflow canary value"
+	depends on FT_ENABLE_BUFFER_OVERFLOW_PROTECTION
+	default 0xDEADBEEF
+	help
+	  32-bit value used as canary for buffer overflow detection.
+	  Should be a distinctive value unlikely to appear in normal data.
+
+config FT_BUFFER_OVERFLOW_CHECK_INTERVAL_MS
+	int "Buffer overflow check interval (ms)"
+	depends on FT_ENABLE_BUFFER_OVERFLOW_PROTECTION
+	default 250
+	range 50 1000
+	help
+	  Interval between buffer integrity checks in milliseconds.
+
+config FT_ENABLE_DEADLOCK_DETECTION
+	bool "Enable Deadlock Detection and Recovery"
+	default y
+	help
+	  Enable comprehensive deadlock detection and automatic recovery.
+	  Provides circular dependency detection, timeout monitoring,
+	  and priority-based resource preemption.
+
+config FT_DEADLOCK_DETECTION_TIMEOUT_MS
+	int "Deadlock detection timeout (ms)"
+	depends on FT_ENABLE_DEADLOCK_DETECTION
+	default 5000
+	range 2000 30000
+	help
+	  Timeout for deadlock detection in milliseconds.
+	  Threads blocked longer than this are considered deadlocked.
+
+config FT_DEADLOCK_MONITOR_INTERVAL_MS
+	int "Deadlock monitoring interval (ms)"
+	depends on FT_ENABLE_DEADLOCK_DETECTION
+	default 1000
+	range 500 5000
+	help
+	  Interval between deadlock detection checks in milliseconds.
+
+config FT_ENABLE_RACE_CONDITION_DETECTION
+	bool "Enable Race Condition Detection and Mitigation"
+	default y
+	help
+	  Enable comprehensive race condition detection and mitigation.
+	  Provides Lamport clock ordering, memory access pattern analysis,
+	  and automatic synchronization repair.
+
+config FT_RACE_CONDITION_DETECTION_WINDOW_US
+	int "Race condition detection window (microseconds)"
+	depends on FT_ENABLE_RACE_CONDITION_DETECTION
+	default 1000
+	range 100 10000
+	help
+	  Time window for detecting concurrent memory accesses that
+	  indicate potential race conditions.
+
+config FT_RACE_CONDITION_ACCESS_HISTORY_SIZE
+	int "Memory access history size"
+	depends on FT_ENABLE_RACE_CONDITION_DETECTION
+	default 64
+	range 32 256
+	help
+	  Number of memory access records to maintain for race detection.
+
+endmenu
+
+# ==============================================================================
+# Advanced Configuration
+# ==============================================================================
+
+config FT_ENABLE_SYSTEM_MONITOR
+	bool "Enable system monitoring"
+	default y
+	depends on WATCHDOG
+	help
+	  Enable system health monitoring including watchdog integration
+	  and resource monitoring.
+
+config FT_ENABLE_FAULT_LOGGING
+	bool "Enable persistent fault logging"
+	default y
+	depends on FLASH && SETTINGS
+	help
+	  Enable persistent logging of faults to flash storage.
+
+config FT_MAX_PERSISTENT_FAULTS
+	int "Maximum persistent fault records"
+	depends on FT_ENABLE_FAULT_LOGGING
+	default 50
+	range 10 200
+	help
+	  Maximum number of fault records to store persistently.
+
+config FT_THREAD_RECOVERY_STACK_SIZE
+	int "Thread recovery default stack size"
+	depends on FT_ENABLE_THREAD_RECOVERY
+	default 2048
+	range 1024 8192
+	help
+	  Default stack size for recovered threads.
+
+config FT_WATCHDOG_TIMEOUT_SEC
+	int "System watchdog timeout (seconds)"
+	depends on FT_ENABLE_SYSTEM_MONITOR
+	default 30
+	range 5 300
+	help
+	  System watchdog timeout in seconds.
+
+config FT_MEMORY_POOL_SIZE
+	int "Fault tolerance memory pool size"
+	default 4096
+	range 2048 16384
+	help
+	  Size of memory pool for fault tolerance operations.
+
+config FT_ENABLE_FAULT_INJECTION
+	bool "Enable fault injection for testing"
+	default n
+	help
+	  Enable fault injection capabilities for testing the
+	  fault tolerance framework. Should not be enabled in
+	  production builds.
+
+config FT_DEADLOCK_DETECTION_TIMEOUT_MS
+	int "Deadlock detection timeout (ms)"
+	default 10000
+	range 5000 60000
+	help
+	  Timeout for deadlock detection in milliseconds.
+
+config FT_ENABLE_CRITICAL_FAULT_REBOOT
+	bool "Automatic reboot on critical faults"
+	default y
+	help
+	  Automatically reboot the system when critical faults are detected
+	  and cannot be recovered from.
+
+config FT_CRITICAL_FAULT_REBOOT_DELAY_MS
+	int "Delay before critical fault reboot (ms)"
+	depends on FT_ENABLE_CRITICAL_FAULT_REBOOT
+	default 1000
+	range 500 5000
+	help
+	  Delay before rebooting on critical faults to allow logging and cleanup.
 
 endif # FAULT_TOLERANCE
