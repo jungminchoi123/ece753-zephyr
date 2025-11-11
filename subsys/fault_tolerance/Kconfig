@@ -1,29 +1,190 @@
-# Author: Jack Ostapeic, MS ECE student at UW-Madison
+# Fault Tolerance Subsystem Configuration
+# Author: Jack Ostapeic, MS ECE Student at University of Wisconsin-Madison
 
 menuconfig FAULT_TOLERANCE
-    bool "Enhanced Fault Tolerance Framework"
+    bool "Enable Fault Tolerance Subsystem"
     help
-        Enable the enhanced fault tolerance framework for safety-critical embedded applications.
-        Provides comprehensive fault detection, recovery, and logging capabilities.
+        Enable the Fault Tolerance Subsystem which provides mechanisms for
+        detecting and recovering from various system faults.
 
 if FAULT_TOLERANCE
+
+# general requirement for application operation
+
+config PRINTK
+    bool "Enable Printk Support"
+    default y
+    help
+        Enable printk support for logging within the Fault Tolerance Subsystem.
+
+config LOG
+    bool "Enable Logging Support"
+    default y
+    help
+        Enable logging support for the Fault Tolerance Subsystem.
+
+config LOG_DEFAULT_LEVEL
+    int "Default Log Level"
+    default 3
+    help
+        Set the default log level for the Fault Tolerance Subsystem.
+        Levels: 0 (None) to 4 (Debug).
+
+config CONSOLE
+    bool "Enable Console Support"
+    default y
+    help
+        Enable console support for the Fault Tolerance Subsystem.
+
+config UART_CONSOLE
+    bool "Enable UART Console Support"
+    default y
+    help
+        Enable UART console support for the Fault Tolerance Subsystem.
+
+config MULTITHREADING
+    bool "Enable Multithreading Support"
+    default y
+    help
+        Enable multithreading support for the Fault Tolerance Subsystem.
+
+# config THREAD_STACK_INFO
+#     bool "Enable Thread Stack Info Support"
+#     default y
+#     help
+#         Enable thread stack information support for the Fault Tolerance Subsystem.
+
+# config THREAD_MONITOR
+#     bool "Enable Thread Monitor Support"
+#     default y
+#     help
+#         Enable thread monitoring support for the Fault Tolerance Subsystem.
+
+config THREAD_STACK_ANALYSIS
+    bool "Enable Thread Stack Analysis Support"
+    default y
+    help
+        Enable thread stack analysis support for the Fault Tolerance Subsystem.
+
+config THREAD_NAME
+    bool "Enable Thread Name Support"
+    default y
+    help
+        Enable thread name support for the Fault Tolerance Subsystem.
+
+config THREAD_NAME_MAX_LEN
+    int "Maximum Thread Name Length"
+    default 32
+    help
+        Define the maximum length for thread names in the Fault Tolerance Subsystem.
+
+#------------------------------------------------------------------------------
+# initialization options
+#------------------------------------------------------------------------------
 
 config FAULT_TOLERANCE_AUTO_INIT
     bool "Enable Automatic Initialization"
     default n
     help
-        Enable automatic initialization of the fault tolerance framework during system startup.
+        Enable automatic initialization of the Fault Tolerance Subsystem
+        during system startup.
 
 config FAULT_TOLERANCE_INIT_PRIORITY
-    int "Fault Tolerance Initialization Priority"
+    int "Initialization Priority"
     default 50
     help
-        Initialization priority for the fault tolerance framework.
-        Lower values indicate earlier initialization during system startup.
-        Typical values:
-            - 40-60: Standard initialization range for most subsystems.
-            - 30-39: Core services
-            - 61-70: Application-level services
+        Set the initialization priority for the Fault Tolerance Subsystem.
+        Lower numbers indicate higher priority.
 
+config FT_MSG_QUEUE_SIZE
+    int "Message Queue Size"
+    default 10
+    help
+        Define the size of the message queue used by the Fault Tolerance Subsystem.
+
+#------------------------------------------------------------------------------
+# Internal thread stack sizes
+#------------------------------------------------------------------------------
+
+config FAULT_TOLERANCE_MONITOR_STACK_SIZE
+    int "Monitor thread stack size (bytes)"
+    default 1024
+    help
+        Define the size of the monitor thread stack used by the Fault Tolerance Subsystem.
+
+config FAULT_TOLERANCE_RECOVER_STACK_SIZE
+    int "Recovery thread stack size (bytes)"
+    default 1024
+    help
+        Define the size of the recovery thread stack used by the Fault Tolerance Subsystem.
+
+#------------------------------------------------------------------------------
+# Fault detection options
+#------------------------------------------------------------------------------
+
+config FT_ENABLE_STACK_OVERFLOW_PROTECTION
+    bool "Enable Stack Overflow Protection"
+    default n
+    help
+        Enable stack overflow protection mechanisms within the Fault Tolerance Subsystem.
+
+config FT_STACK_OVERFLOW_THRESHOLD
+    int "Stack Overflow Threshold (bytes)"
+    depends on FT_ENABLE_STACK_OVERFLOW_PROTECTION
+    default 128
+    help
+        Define the threshold for stack overflow detection in bytes.
+
+config FT_ENABLE_DEADLOCK_DETECTION
+    bool "Enable Deadlock Detection"
+    default n
+    help
+        Enable deadlock detection mechanisms for thread synchronization.
+
+config FT_DEADLOCK_TIMEOUT_MS
+    int "Deadlock Detection Timeout (milliseconds)"
+    depends on FT_ENABLE_DEADLOCK_DETECTION
+    default 5000
+    help
+        Timeout in milliseconds before considering threads deadlocked.
+
+config FT_ENABLE_BUFFER_OVERFLOW_PROTECTION
+    bool "Enable Buffer Overflow Protection"
+    default n
+    help
+        Enable buffer overflow detection using canary patterns and bounds checking.
+
+config FT_BUFFER_OVERFLOW_CANARY_SIZE
+    int "Buffer Canary Size (bytes)"
+    depends on FT_ENABLE_BUFFER_OVERFLOW_PROTECTION
+    default 8
+    help
+        Size of canary patterns used for buffer overflow detection.
+
+config FT_ENABLE_MEMORY_LEAK_DETECTION
+    bool "Enable Memory Leak Detection"
+    default n
+    help
+        Enable memory leak detection and tracking mechanisms.
+
+config FT_MEMORY_LEAK_THRESHOLD
+    int "Memory Leak Threshold (bytes)"
+    depends on FT_ENABLE_MEMORY_LEAK_DETECTION
+    default 1024
+    help
+        Threshold in bytes for reporting memory leaks.
+
+config FT_ENABLE_TIMING_VIOLATION_DETECTION
+    bool "Enable Timing Violation Detection"
+    default n
+    help
+        Enable real-time timing constraint violation detection.
+
+config FT_TIMING_VIOLATION_THRESHOLD_MS
+    int "Timing Violation Threshold (milliseconds)"
+    depends on FT_ENABLE_TIMING_VIOLATION_DETECTION
+    default 1000
+    help
+        Default threshold in milliseconds for timing violations.
 
 endif # FAULT_TOLERANCE

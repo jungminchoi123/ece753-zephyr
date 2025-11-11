@@ -1,0 +1,38 @@
+# Enhanced ARM Cortex-M3 Fault Tolerance Framework
+# CMakeLists.txt
+#
+# This build configuration compiles a comprehensive fault tolerance
+# test suite specifically designed for ARM Cortex-M3 architecture.
+
+cmake_minimum_required(VERSION 3.20.0)
+
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+
+project(ft_cortexm3_enhanced 
+        VERSION 1.0.0 
+        DESCRIPTION "Enhanced Fault Tolerance Framework for ARM Cortex-M3")
+
+# Main application source
+target_sources(app PRIVATE src/main.c)
+
+# Individual fault test modules
+target_sources(app PRIVATE src/fault_tests/stack_overflow_test.c)
+# Fault tolerance tests - only files that exist  
+target_sources(app PRIVATE src/fault_tests/stack_overflow_test.c)
+target_sources(app PRIVATE src/fault_tests/null_pointer_test.c)
+target_sources(app PRIVATE src/fault_tests/peripheral_misconfig_test.c)
+target_sources(app PRIVATE src/fault_tests/memory_access_test.c)
+target_sources(app PRIVATE src/fault_tests/division_by_zero_test.c)
+target_sources(app PRIVATE src/fault_tests/bus_fault_test.c)
+target_sources(app PRIVATE src/fault_tests/deadlock_test.c)
+target_sources(app PRIVATE src/fault_tests/heap_corruption_test.c)
+
+# Enhanced fault handlers for ARM Cortex-M3
+target_sources(app PRIVATE src/fault_handlers/cortexm_fault_handlers.c)
+
+# Include directories for modular design
+target_include_directories(app PRIVATE 
+    src/
+    src/fault_tests/
+    src/fault_handlers/
+)

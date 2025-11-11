@@ -1,74 +1,72 @@
 /**
-    * @file main.c
-    * @author Jack Ostapeic, MS ECE student at UW-Madison
-    * @brief Fault Tolerance API Testing Application
-    *
-    * This application validates the functionality of the Fault Tolerance (FT) API
-    * in the Zephyr RTOS. It includes tests for fault reporting, handler registration,
-    * recovery actions, and logging mechanisms.
+ * @file main.c
+ * @author Jack Ostapeic, MS ECE student at UW-Madison
+ * @brief Fault Tolerance API Testing Application
+ *
+ * This application validates the functionality of the Fault Tolerance (FT) API
+ * in the Zephyr RTOS. It includes tests for fault reporting, handler registration,
+ * recovery actions, and logging mechanisms.
  */
 
-#include <zephyr/kernel.h>
 #include <zephyr/fault_tolerance.h>
+#include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/sys/printk.h>
+// #include <logging/log.h>
 
 #include <string.h>
 #include <stdio.h>
 
 LOG_MODULE_REGISTER(ft_api_testing, LOG_LEVEL_INF);
 
-// test configurations
-// TODO : TEST_DURATION
-#define TEST_THREAD_COUNT 4
-#define TEST_STACK_SIZE 2048
-#define SMALL_STACK_SIZE 512
-// TODO : ITERATION_DELAY
+#define THREAD_STACK_SIZE 1024
 
-// test result tracking
-struct test_results {
-    uint32_t tests_run;
-    uint32_t tests_passed;
-    uint32_t tests_failed; 
-    uint32_t faults_injected;
-    uint32_t recoveries_successful;
-    uint32_t recoveries_failed;
-};
+K_THREAD_STACK_DEFINE(test_thread_stack, THREAD_STACK_SIZE);
+static struct k_thread test_thread;
 
-// static struct test_results results = {0};
-static struct k_mutex results_lock;
-static volatile bool tests_running = true;
-
-// test thread stacks
-K_THREAD_STACK_ARRAY_DEFINE(test_stacks, TEST_THREAD_COUNT, TEST_STACK_SIZE);
-K_THREAD_STACK_DEFINE(small_stack, SMALL_STACK_SIZE);
-
-// static struct k_thread test_threads[TEST_THREAD_COUNT];
-// static struct k_thread overflow_thread;
-
-void do_nothing(void)
+void thread_entry(void *p1, void *p2, void *p3)
 {
-    return;
+    LOG_INF("Test thread started - triggering stack overflow...\n");
+    recursive_bomb(0);
+}
+
+void recursive_bomb(int depth)
+{
+    volatile char buffer[200];
+    for (int i = 0; i < 200; i++) {
+        buffer[i] = (depth + i) & 0xFF;
+    }
+
+    size_t unused;
+    if (k_thread_stack_space_get(k_current_get(), &unused) == 0) {
+        printk("Unused stack: %zu bytes\n", unused);
+    }
+
+    printk("Recursion depth: %d\n", depth);
+    k_yield();
+    recursive_bomb(depth + 1);
 }
 
 int main(void)
 {
-    int ret; 
+    int ret;
 
     printk("Enhanced Fault Tolerance API Testing Application Starting...\n");
-    printk("ECE753 Project - Safety-Critical Embedded Systems\n");
 
-    // Initialize mutex for results tracking
-    k_mutex_init(&results_lock);
-
-    // Initialize the Fault Tolerance framework
     ret = ft_init();
-    // LOG_INF("ret = %d", ret);
-    // if (ret != 0) {
-    //     LOG_ERR("Failed to initialize Fault Tolerance framework: %d", ret);
-    //     return ret;
-    // }
+    printk("Fault Tolerance subsystem initialization returned: %d\n", ret);
 
-    
+    ret = ft_init();
+    printk("Fault Tolerance subsystem re-initialization returned: %d\n", ret);
+
+    k_thread_create(&test_thread, test_thread_stack, THREAD_STACK_SIZE,
+                    (k_thread_entry_t)thread_entry, (void *)0, NULL, NULL,
+                    K_PRIO_COOP(5), 0, K_NO_WAIT);
+
+    k_thread_name_set(&test_thread, "ft_test_thread");
+
+    while (1) {
+        k_sleep(K_MSEC(1000));
+    }
+
     return 0;
 }
